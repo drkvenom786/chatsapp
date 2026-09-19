@@ -66,8 +66,6 @@ cd chatsapp
 
 ## Environment Variables & Configuration Guide
 
-ChatsApp is designed with **zero hardcoded secrets** in the repository. All services rely strictly on environment variables and secrets.
-
 ### 1. Variables Breakdown
 
 #### Frontend Variables (`frontend/.env.local` / Netlify / GitHub Variables)
@@ -213,14 +211,6 @@ npm install
 npm run build
 npx netlify-cli deploy --prod --dir=dist
 ```
-
----
-
-## Security
-
-- All API keys, tokens, and credentials are configured strictly via environment variables.
-- No secrets or credentials are stored within repository code or tracking history.
-- Local configuration files (`.env.local`, `.dev.vars`) are excluded from Git via `.gitignore`.
 
 ---
 

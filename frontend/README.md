@@ -7,7 +7,7 @@ Standalone React + Vite + Tailwind PWA client for **ChatsApp**, designed for eff
 ## Features
 - **Standalone Client**: Zero Node.js server dependencies; 100% pure client-side static build.
 - **Dynamic Backend Binding**: Connects to your Cloudflare Worker via the `VITE_BACKEND_URL` environment variable.
-- **Zero Hardcoded Secrets**: All Firebase keys and backend URLs are injected at build/runtime via environment variables.
+- **Configurable Runtime**: Backend API endpoints and Firebase options are dynamically injected via environment variables.
 - **End-to-End Encryption**: Retains all client-side encryption and crypto routines.
 - **PWA Ready**: Offline caching, installable web app manifest, and push notifications.
 

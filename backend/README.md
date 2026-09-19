@@ -5,7 +5,7 @@ Serverless backend for **ChatsApp** running on Cloudflare Workers with Cloudflar
 ---
 
 ## Features
-- **Zero Hardcoded Keys**: All configuration dynamically injected via Cloudflare environment variables and secrets.
+- **Environment-Driven Configuration**: Fully configurable via Cloudflare environment variables and secrets.
 - **Full CORS Support**: Allows preflight and requests from your frontend hosted on Netlify, Vercel, or custom domains.
 - **R2 Media Management**: Uploads, streams, and deletes media files (images, audio, video, attachments).
 - **FCM Push Notifications**: Supports HTTP v1 (Google Service Account) and legacy FCM server keys.
