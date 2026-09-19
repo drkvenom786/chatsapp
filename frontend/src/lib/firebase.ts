@@ -2376,7 +2376,7 @@ export async function sendCallPushNotification(
         body: JSON.stringify({
           token: tokenStr,
           title: `📞 Incoming ${callType === "video" ? "Video" : "Voice"} Call`,
-          body: `${callerName} is calling you on chatsapp.pro. Tap to answer.`,
+          body: `${callerName} is calling you on ChatsApp. Tap to answer.`,
           icon: "/icons/icon-192x192.png",
           data: {
             type: "incoming_call",

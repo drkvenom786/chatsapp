@@ -41,7 +41,7 @@ export default function DesktopSidebar({
             <Heart className="w-5 h-5 fill-white animate-pulse" />
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-none text-foreground tracking-tight">chatsapp.pro</h1>
+            <h1 className="font-bold text-lg leading-none text-foreground tracking-tight">ChatsApp</h1>
             <p className={`text-xs ${getAccentTextClass(accentColor)} font-medium mt-1 flex items-center gap-1`}>
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping"></span>
               Realtime Messaging

@@ -1,6 +1,6 @@
 {
-  "name": "chatsapp.pro",
-  "short_name": "chatsapp.pro",
+  "name": "ChatsApp",
+  "short_name": "ChatsApp",
   "description": "Realtime private messaging PWA",
   "start_url": "/",
   "scope": "/",

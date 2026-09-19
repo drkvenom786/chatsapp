@@ -579,7 +579,7 @@ export default function Settings({ currentUser, onLogout }: SettingsProps) {
           {/* Footer */}
           <div className="text-center py-4">
             <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-              chatsapp.pro v1.0.0
+              ChatsApp v1.0.0
             </p>
           </div>
         </div>

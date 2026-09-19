@@ -1,5 +1,5 @@
 // ============================================================================
-// chatsapp.pro - Main Service Worker for PWA Cache & Background FCM Messaging
+// ChatsApp - Main Service Worker for PWA Cache & Background FCM Messaging
 // ============================================================================
 
 importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js");
