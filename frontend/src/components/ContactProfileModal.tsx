@@ -14,6 +14,10 @@ import {
   Check,
   Image as ImageIcon,
   ChevronRight,
+  Music,
+  FileText,
+  Download,
+  Film,
 } from "lucide-react";
 import { useTheme, getAccentBgClass, getAccentTextClass } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
@@ -53,6 +57,7 @@ export default function ContactProfileModal({
   const { accentColor } = useTheme();
   const [copiedUsername, setCopiedUsername] = useState(false);
   const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
+  const [activeMediaTab, setActiveMediaTab] = useState<"media" | "docs" | "audio">("media");
 
   if (!isOpen || !contact) return null;
 
@@ -60,9 +65,44 @@ export default function ContactProfileModal({
   const username = contact.username || contact.displayName || "user";
   const customBio = (contact.bio && contact.bio.trim()) ? contact.bio.trim() : "Hey there! I am using ChatsApp.";
 
-  // Extract shared media from current conversation
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // 1. Photos & Videos
   const sharedMedia = messages.filter(
-    (m) => !m.deletedForEveryone && m.mediaUrl && (m.mediaType?.startsWith("image") || m.mediaUrl.match(/\.(jpg|jpeg|png|webp|gif)$/i))
+    (m) =>
+      !m.deletedForEveryone &&
+      m.mediaUrl &&
+      (m.mediaType === "image" ||
+        m.mediaType === "video" ||
+        m.mediaUrl.match(/\.(jpg|jpeg|png|webp|gif|mp4|mov|webm)$/i))
+  );
+
+  // 2. Documents & PDFs
+  const sharedDocs = messages.filter(
+    (m) =>
+      !m.deletedForEveryone &&
+      m.mediaUrl &&
+      (m.mediaType === "file" ||
+        m.mediaUrl.match(/\.(pdf|doc|docx|txt|xls|xlsx|ppt|pptx|zip|rar|csv)$/i) ||
+        (m.mediaName &&
+          !m.mediaType?.startsWith("image") &&
+          !m.mediaType?.startsWith("video") &&
+          !m.mediaType?.startsWith("audio") &&
+          !m.mediaUrl.match(/\.(jpg|jpeg|png|webp|gif|mp4|mov|webm|mp3|wav|ogg|m4a|aac)$/i)))
+  );
+
+  // 3. Audio files
+  const sharedAudios = messages.filter(
+    (m) =>
+      !m.deletedForEveryone &&
+      m.mediaUrl &&
+      (m.mediaType === "audio" ||
+        m.mediaUrl.match(/\.(mp3|wav|ogg|m4a|aac)$/i))
   );
 
   const handleCopyUsername = () => {
@@ -177,7 +217,7 @@ export default function ContactProfileModal({
                     <Phone className="w-5 h-5" />
                   </div>
                   <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-                    Audio
+                    Call
                   </span>
                 </button>
               </div>
@@ -193,38 +233,158 @@ export default function ContactProfileModal({
               </p>
             </div>
 
-            {/* Shared Media Section */}
+            {/* Shared Media, Docs & Audio Section */}
             <div className="bg-white dark:bg-slate-900 p-4 shadow-sm border-y border-slate-200/50 dark:border-slate-800/60">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5" /> Media, links, and docs
+                  <ImageIcon className="w-3.5 h-3.5" /> Media, docs, and audio
                 </span>
                 <span className="text-xs text-muted-foreground font-medium">
-                  {sharedMedia.length} {sharedMedia.length === 1 ? "item" : "items"}
+                  {sharedMedia.length + sharedDocs.length + sharedAudios.length} total
                 </span>
               </div>
 
-              {sharedMedia.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2">
-                  {sharedMedia.slice(0, 4).map((msg, i) => (
-                    <div
-                      key={msg.id || i}
-                      onClick={() => setSelectedPreviewImage(getMediaUrl(msg.mediaUrl))}
-                      className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 cursor-pointer hover:opacity-90 transition-opacity relative group"
-                    >
-                      <img
-                        src={getMediaUrl(msg.mediaUrl)}
-                        alt="Shared media"
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground italic py-1">
-                  No media shared in this chat yet.
-                </p>
+              {/* Category Tabs */}
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl mb-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveMediaTab("media")}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                    activeMediaTab === "media"
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Media ({sharedMedia.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveMediaTab("docs")}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                    activeMediaTab === "docs"
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Docs ({sharedDocs.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveMediaTab("audio")}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                    activeMediaTab === "audio"
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Audio ({sharedAudios.length})
+                </button>
+              </div>
+
+              {/* Tab 1: Photos & Videos */}
+              {activeMediaTab === "media" && (
+                sharedMedia.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2">
+                    {sharedMedia.map((msg, i) => (
+                      <div
+                        key={msg.id || i}
+                        onClick={() => setSelectedPreviewImage(getMediaUrl(msg.mediaUrl))}
+                        className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 cursor-pointer hover:opacity-90 transition-opacity relative group"
+                      >
+                        {msg.mediaType === "video" || msg.mediaUrl.match(/\.(mp4|mov|webm)$/i) ? (
+                          <div className="w-full h-full flex items-center justify-center bg-slate-800 text-white relative">
+                            <video src={getMediaUrl(msg.mediaUrl)} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                              <Film className="w-5 h-5 text-white" />
+                            </div>
+                          </div>
+                        ) : (
+                          <img
+                            src={getMediaUrl(msg.mediaUrl)}
+                            alt="Shared media"
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic py-2 text-center">
+                    No photos or videos shared in this chat yet.
+                  </p>
+                )
+              )}
+
+              {/* Tab 2: Documents & PDFs */}
+              {activeMediaTab === "docs" && (
+                sharedDocs.length > 0 ? (
+                  <div className="space-y-2">
+                    {sharedDocs.map((msg, i) => (
+                      <a
+                        key={msg.id || i}
+                        href={getMediaUrl(msg.mediaUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={msg.mediaName || "document"}
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-700/60 transition-colors group"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-500 flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1 text-left">
+                          <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                            {msg.mediaName || "Document"}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatFileSize(msg.mediaSize) || "File"}
+                          </p>
+                        </div>
+                        <Download className="w-4 h-4 text-muted-foreground group-hover:text-rose-500 transition-colors shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic py-2 text-center">
+                    No documents or PDFs shared in this chat yet.
+                  </p>
+                )
+              )}
+
+              {/* Tab 3: Audio files */}
+              {activeMediaTab === "audio" && (
+                sharedAudios.length > 0 ? (
+                  <div className="space-y-2">
+                    {sharedAudios.map((msg, i) => (
+                      <div
+                        key={msg.id || i}
+                        className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/60"
+                      >
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            <Music className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate flex-1">
+                            {msg.mediaName || "Audio file"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
+                            {formatFileSize(msg.mediaSize)}
+                          </span>
+                        </div>
+                        <audio
+                          controls
+                          src={getMediaUrl(msg.mediaUrl)}
+                          className="w-full h-8"
+                          preload="none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic py-2 text-center">
+                    No audio files shared in this chat yet.
+                  </p>
+                )
               )}
             </div>
 

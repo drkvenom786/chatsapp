@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { updateUserProfile } from "@/lib/firebase";
+import { updateUserProfile, updateUserBio, loadFirebase } from "@/lib/firebase";
 import { toast } from "sonner";
-import { Mail, Phone, Calendar, Edit2, Share2 } from "lucide-react";
+import { Mail, Phone, Calendar, Edit2, Share2, Sparkles } from "lucide-react";
 import {
   useTheme,
   getAccentTextClass,
@@ -23,6 +23,46 @@ export default function Profile({ currentUser }: ProfileProps) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(currentUser?.displayName || "");
   const [saving, setSaving] = useState(false);
+  const [bio, setBio] = useState<string>(currentUser?.bio || "Hey there! I am using ChatsApp.");
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [bioInput, setBioInput] = useState("");
+  const [savingBio, setSavingBio] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const fetchUserBio = async () => {
+      try {
+        const runtime = await loadFirebase();
+        if (runtime) {
+          const snap = await runtime.dbFns.get(
+            runtime.dbFns.ref(runtime.db, `users/${currentUser.uid}/bio`)
+          );
+          if (snap.exists()) {
+            const val = snap.val();
+            if (val) setBio(val);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch bio in Profile:", err);
+      }
+    };
+    fetchUserBio();
+  }, [currentUser?.uid]);
+
+  const handleSaveBio = async () => {
+    if (!currentUser?.uid) return;
+    setSavingBio(true);
+    try {
+      await updateUserBio(currentUser.uid, bioInput);
+      setBio(bioInput.trim() || "Hey there! I am using ChatsApp.");
+      setIsEditingBio(false);
+      toast.success("Bio updated successfully!");
+    } catch (err) {
+      toast.error("Failed to update bio");
+    } finally {
+      setSavingBio(false);
+    }
+  };
   const joinDate = new Date(currentUser?.metadata?.creationTime || Date.now());
   const formattedDate = joinDate.toLocaleDateString("en-US", {
     year: "numeric",
@@ -105,6 +145,65 @@ export default function Profile({ currentUser }: ProfileProps) {
                   <Edit2 className="w-4 h-4" />
                 </button>
               </div>
+            )}
+          </div>
+
+          {/* About / Bio Section */}
+          <div className="glass-sm rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                About / Bio
+              </h3>
+              {!isEditingBio && (
+                <button
+                  onClick={() => {
+                    setBioInput(bio);
+                    setIsEditingBio(true);
+                  }}
+                  className={`p-1.5 rounded-full hover:${getAccentLightBgClass(accentColor)} ${getAccentTextClass(accentColor)} transition-colors cursor-pointer flex items-center gap-1 text-xs font-semibold`}
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit</span>
+                </button>
+              )}
+            </div>
+
+            {isEditingBio ? (
+              <div className="space-y-3 mt-1">
+                <Input
+                  value={bioInput}
+                  onChange={(e) => setBioInput(e.target.value)}
+                  placeholder="Tell others about yourself..."
+                  maxLength={140}
+                  className="bg-white/50 dark:bg-black/30 border-black/10 dark:border-white/10 rounded-xl"
+                  autoFocus
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">{bioInput.length}/140</span>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setIsEditingBio(false)}
+                      disabled={savingBio}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      className={`${getAccentBgClass(accentColor)} text-white`}
+                      onClick={handleSaveBio}
+                      disabled={savingBio}
+                    >
+                      {savingBio ? "Saving..." : "Save"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm font-medium text-foreground bg-white/20 dark:bg-white/5 p-3 rounded-xl select-text leading-relaxed">
+                {bio || "Hey there! I am using ChatsApp."}
+              </p>
             )}
           </div>
 

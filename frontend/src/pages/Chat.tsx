@@ -239,7 +239,7 @@ export default function Chat({
 
     if (fileInputRef.current) fileInputRef.current.value = "";
 
-    const localPreviewUrl = (file.type.startsWith("image/") || file.type.startsWith("video/"))
+    const localPreviewUrl = (file.type.startsWith("image/") || file.type.startsWith("video/") || file.type.startsWith("audio/"))
       ? URL.createObjectURL(file)
       : "";
 
@@ -392,57 +392,72 @@ export default function Chat({
     selectedUser?.uid || ""
   );
 
+  const [localDeletedForMeIds, setLocalDeletedForMeIds] = useState<Set<string>>(() => {
+    try {
+      const cached = localStorage.getItem(`chatsapp_deleted_for_me_${currentUser?.uid}`);
+      return cached ? new Set(JSON.parse(cached)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
   const displayedMessages = useMemo(() => {
     const pendingForSelected = offlinePendingQueue.filter(
       (m) =>
         (m.senderId === currentUser?.uid && m.receiverId === selectedUser?.uid) ||
         (m.senderId === selectedUser?.uid && m.receiverId === currentUser?.uid)
     );
-    if (pendingForSelected.length === 0) return messages;
 
-    const matchedFirebaseIds = new Set<string>();
+    let all: ChatMessage[] = messages;
 
-    const unsyncedPending = pendingForSelected.filter((pending) => {
-      // 1. Direct ID match
-      if (messages.some((m) => m.id === pending.id)) return false;
+    if (pendingForSelected.length > 0) {
+      const matchedFirebaseIds = new Set<string>();
 
-      // 2. Check if a message in Firebase matches this pending item
-      const matchingFirebaseMsg = messages.find((m) => {
-        if (!m.id || matchedFirebaseIds.has(m.id)) return false;
-        if (m.senderId !== pending.senderId) return false;
+      const unsyncedPending = pendingForSelected.filter((pending) => {
+        // 1. Direct ID match
+        if (messages.some((m) => m.id === pending.id)) return false;
 
-        // Match media
-        if (pending.mediaKey && m.mediaKey === pending.mediaKey) return true;
-        if (
-          pending.mediaName &&
-          m.mediaName === pending.mediaName &&
-          Math.abs((m.timestamp || 0) - (pending.timestamp || 0)) < 10000
-        ) {
-          return true;
+        // 2. Check if a message in Firebase matches this pending item
+        const matchingFirebaseMsg = messages.find((m) => {
+          if (!m.id || matchedFirebaseIds.has(m.id)) return false;
+          if (m.senderId !== pending.senderId) return false;
+
+          // Match media
+          if (pending.mediaKey && m.mediaKey === pending.mediaKey) return true;
+          if (
+            pending.mediaName &&
+            m.mediaName === pending.mediaName &&
+            Math.abs((m.timestamp || 0) - (pending.timestamp || 0)) < 10000
+          ) {
+            return true;
+          }
+
+          // Match text & timestamp proximity
+          if (
+            pending.text &&
+            m.text === pending.text &&
+            Math.abs((m.timestamp || 0) - (pending.timestamp || 0)) < 10000
+          ) {
+            return true;
+          }
+
+          return false;
+        });
+
+        if (matchingFirebaseMsg && matchingFirebaseMsg.id) {
+          matchedFirebaseIds.add(matchingFirebaseMsg.id);
+          return false; // Already in Firebase, don't duplicate
         }
 
-        // Match text & timestamp proximity
-        if (
-          pending.text &&
-          m.text === pending.text &&
-          Math.abs((m.timestamp || 0) - (pending.timestamp || 0)) < 10000
-        ) {
-          return true;
-        }
-
-        return false;
+        return true; // Still pending / unsynced
       });
 
-      if (matchingFirebaseMsg && matchingFirebaseMsg.id) {
-        matchedFirebaseIds.add(matchingFirebaseMsg.id);
-        return false; // Already in Firebase, don't duplicate
-      }
+      all = [...messages, ...unsyncedPending].sort((a, b) => a.timestamp - b.timestamp);
+    }
 
-      return true; // Still pending / unsynced
-    });
-
-    return [...messages, ...unsyncedPending].sort((a, b) => a.timestamp - b.timestamp);
-  }, [messages, offlinePendingQueue, currentUser?.uid, selectedUser?.uid]);
+    if (localDeletedForMeIds.size === 0) return all;
+    return all.filter((m) => !m.id || !localDeletedForMeIds.has(m.id));
+  }, [messages, offlinePendingQueue, currentUser?.uid, selectedUser?.uid, localDeletedForMeIds]);
 
   const isTyping = useTypingStatus(
     currentUser?.uid || "",
@@ -490,6 +505,13 @@ export default function Chat({
   const handleTouchEnd = (msg: ChatMessage, senderName: string) => {
     if (!touchStartRef.current || touchStartRef.current.id !== msg.id) return;
     const offset = swipeOffset[msg.id || ""] || 0;
+
+    // Do NOT allow replying to deleted messages
+    if (msg.deletedForEveryone || (currentUser?.uid && msg.deletedFor?.[currentUser.uid]) || (msg.id && localDeletedForMeIds.has(msg.id))) {
+      setSwipeOffset((prev) => ({ ...prev, [msg.id || ""]: 0 }));
+      touchStartRef.current = null;
+      return;
+    }
 
     if (Math.abs(offset) > 45 && msg.id) {
       if (typeof navigator !== "undefined" && navigator.vibrate) {
@@ -1248,7 +1270,7 @@ export default function Chat({
     const date = new Date(timestamp);
     const now = new Date();
     if (date.toDateString() === now.toDateString()) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
     }
     return date.toLocaleDateString([], { month: "short", day: "numeric" });
   };
@@ -1515,12 +1537,21 @@ export default function Chat({
           ) : (
             displayedMessages.map((msg) => {
               const isOutgoing = msg.senderId === currentUser.uid;
-              const isDeleted = msg.deletedForEveryone;
+              const isDeleted = Boolean(
+                msg.deletedForEveryone ||
+                (currentUser?.uid && msg.deletedFor?.[currentUser.uid]) ||
+                (msg.id && localDeletedForMeIds.has(msg.id))
+              );
               const emojiInfo = (!isDeleted && !msg.mediaUrl && !msg.callInfo && !msg.replyTo && msg.text)
                 ? getEmojiOnlyInfo(msg.text)
                 : { isOnlyEmoji: false, count: 0 };
               const isEmojiOnly = emojiInfo.isOnlyEmoji;
-              const isPending = Boolean(msg.failed || (msg.id && String(msg.id).startsWith("offline_")));
+              const isPending = Boolean(
+                msg.isUploadingMedia ||
+                msg.failed ||
+                (msg.id && String(msg.id).startsWith("pending_")) ||
+                (msg.id && String(msg.id).startsWith("offline_"))
+              );
               const hasActiveReactions = !isDeleted && Boolean(
                 msg.reactions && Object.values(msg.reactions).some((uidsMap) => Object.values(uidsMap || {}).some(Boolean))
               );
@@ -1531,10 +1562,10 @@ export default function Chat({
                   className={`flex ${isOutgoing ? "justify-end" : "justify-start"} group animate-slide-up relative ${hasActiveReactions ? "mb-4 z-20" : "mb-1.5"}`}
                 >
                   <div
-                    onTouchStart={(e) => msg.id && handleTouchStart(msg.id, e)}
-                    onTouchMove={(e) => msg.id && handleTouchMove(msg.id, isOutgoing, e)}
-                    onTouchEnd={() => msg.id && handleTouchEnd(msg, isOutgoing ? "You" : selectedUser?.name || "Friend")}
-                    style={{ transform: `translateX(${swipeOffset[msg.id || ""] || 0}px)` }}
+                    onTouchStart={(e) => !isDeleted && msg.id && handleTouchStart(msg.id, e)}
+                    onTouchMove={(e) => !isDeleted && msg.id && handleTouchMove(msg.id, isOutgoing, e)}
+                    onTouchEnd={() => !isDeleted && msg.id && handleTouchEnd(msg, isOutgoing ? "You" : selectedUser?.name || "Friend")}
+                    style={{ transform: !isDeleted ? `translateX(${swipeOffset[msg.id || ""] || 0}px)` : undefined }}
                     onPointerDown={(e) => {
                       e.stopPropagation();
                       const id = msg.id || "";
@@ -1615,22 +1646,28 @@ export default function Chat({
                     )}
 
                     {/* Media Content */}
-                    {!isDeleted && msg.mediaUrl && (
+                    {!isDeleted && (msg.mediaUrl || msg.localFile || msg.mediaName || msg.mediaType) && (
                       <div className="relative mb-2 max-w-full overflow-hidden rounded-2xl">
                         {msg.mediaType === "image" && (
                           <div className="relative group">
                             <img
-                              src={getMediaUrl(msg.mediaUrl)}
+                              src={msg.mediaUrl ? getMediaUrl(msg.mediaUrl) : (msg.localFile ? URL.createObjectURL(msg.localFile) : "")}
                               alt={msg.mediaName || "Photo"}
                               className={`max-w-full max-h-80 rounded-2xl object-cover border border-black/10 cursor-pointer hover:opacity-95 transition-all shadow-sm ${
                                 msg.isUploadingMedia ? "brightness-75" : ""
                               }`}
-                              onClick={() => setExpandedMediaUrl(getMediaUrl(msg.mediaUrl))}
+                              onClick={() => {
+                                const u = msg.mediaUrl ? getMediaUrl(msg.mediaUrl) : (msg.localFile ? URL.createObjectURL(msg.localFile) : "");
+                                if (u) setExpandedMediaUrl(u);
+                              }}
                             />
                             {!msg.isUploadingMedia && (
                               <button
                                 type="button"
-                                onClick={() => setExpandedMediaUrl(getMediaUrl(msg.mediaUrl))}
+                                onClick={() => {
+                                  const u = msg.mediaUrl ? getMediaUrl(msg.mediaUrl) : (msg.localFile ? URL.createObjectURL(msg.localFile) : "");
+                                  if (u) setExpandedMediaUrl(u);
+                                }}
                                 className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
                                 title="Expand Image"
                               >
@@ -1641,7 +1678,7 @@ export default function Chat({
                         )}
                         {msg.mediaType === "video" && (
                           <video
-                            src={getMediaUrl(msg.mediaUrl)}
+                            src={msg.mediaUrl ? getMediaUrl(msg.mediaUrl) : (msg.localFile ? URL.createObjectURL(msg.localFile) : "")}
                             controls={!msg.isUploadingMedia}
                             className={`max-w-full max-h-80 rounded-2xl border border-black/10 shadow-sm ${
                               msg.isUploadingMedia ? "brightness-75" : ""
@@ -1650,8 +1687,8 @@ export default function Chat({
                         )}
                         {msg.mediaType === "audio" && (
                           <AudioPlayer
-                            src={getMediaUrl(msg.mediaUrl)}
-                            fileName={msg.mediaName}
+                            src={msg.mediaUrl ? getMediaUrl(msg.mediaUrl) : (msg.localFile ? URL.createObjectURL(msg.localFile) : "")}
+                            fileName={msg.mediaName || "Audio file"}
                             fileSize={msg.mediaSize}
                             isOutgoing={isOutgoing}
                             disabled={msg.isUploadingMedia}
@@ -1659,11 +1696,16 @@ export default function Chat({
                         )}
                         {msg.mediaType === "file" && (
                           <a
-                            href={msg.isUploadingMedia ? "#" : getMediaUrl(msg.mediaUrl)}
-                            target="_blank"
+                            href={msg.isUploadingMedia || !msg.mediaUrl ? "#" : getMediaUrl(msg.mediaUrl)}
+                            target={msg.isUploadingMedia || !msg.mediaUrl ? undefined : "_blank"}
                             rel="noopener noreferrer"
                             download={msg.mediaName || "file"}
                             className="flex items-center gap-3 p-3 rounded-2xl bg-black/5 dark:bg-white/10 border border-black/10 hover:bg-black/10 dark:hover:bg-white/15 transition-colors group"
+                            onClick={(e) => {
+                              if (msg.isUploadingMedia || !msg.mediaUrl) {
+                                e.preventDefault();
+                              }
+                            }}
                           >
                             <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
                               <FileText className="w-5 h-5" />
@@ -1674,7 +1716,7 @@ export default function Chat({
                                 <p className="text-[10px] text-muted-foreground">{formatFileSize(msg.mediaSize)}</p>
                               )}
                             </div>
-                            {!msg.isUploadingMedia && (
+                            {!msg.isUploadingMedia && msg.mediaUrl && (
                               <Download className="w-4 h-4 text-muted-foreground group-hover:text-rose-500 transition-colors shrink-0" />
                             )}
                           </a>
@@ -1844,7 +1886,7 @@ export default function Chat({
                       <span className={`text-[10px] ${
                         isEmojiOnly ? "text-white/90 font-medium" : "text-slate-500 dark:text-slate-300"
                       }`}>
-                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
                       </span>
                       {isOutgoing && !isDeleted && !msg.callInfo && (
                         <span className="inline-flex items-center ml-1">
@@ -2035,12 +2077,43 @@ export default function Chat({
             messageId={menuConfig.id}
             messageText={menuConfig.text}
             isOwn={menuConfig.isOwn}
-            isDeleted={targetMsg?.deletedForEveryone || false}
+            isDeleted={Boolean(targetMsg?.deletedForEveryone || (currentUser?.uid && targetMsg?.deletedFor?.[currentUser.uid]) || (targetMsg?.id && localDeletedForMeIds.has(targetMsg.id)))}
             isCallHistory={isCallHistory}
             mediaUrl={getMediaUrl(targetMsg?.mediaUrl)}
             mediaName={targetMsg?.mediaName}
             onDeleteForMe={async (msgId) => {
-              await deleteMessageForMe(currentUser.uid, selectedUser.uid, msgId);
+              // 1. Immediately remove from offline pending queue
+              setOfflinePendingQueue((prev) => prev.filter((m) => m.id !== msgId));
+
+              // 2. Mark locally as deleted for me (persisted in localStorage)
+              setLocalDeletedForMeIds((prev) => {
+                const next = new Set(prev).add(msgId);
+                try {
+                  localStorage.setItem(
+                    `chatsapp_deleted_for_me_${currentUser?.uid}`,
+                    JSON.stringify(Array.from(next))
+                  );
+                } catch {}
+                return next;
+              });
+
+              // 3. Remove from cached room messages in localStorage
+              try {
+                const roomKey = `chatsapp_msgs_${[currentUser?.uid, selectedUser?.uid].sort().join("_")}`;
+                const cached = localStorage.getItem(roomKey);
+                if (cached) {
+                  const msgs = JSON.parse(cached).filter((m: any) => m.id !== msgId);
+                  localStorage.setItem(roomKey, JSON.stringify(msgs));
+                }
+              } catch {}
+
+              // 4. Background DB update
+              try {
+                deleteMessageForMe(currentUser.uid, selectedUser.uid, msgId);
+              } catch (e) {
+                console.warn("Background delete error:", e);
+              }
+
               setMenuConfig(null);
             }}
             onDeleteForEveryone={async (msgId) => {
@@ -2055,6 +2128,10 @@ export default function Chat({
             }}
             onReply={(msgId, text) => {
               const msg = displayedMessages.find((m) => m.id === msgId);
+              if (msg?.deletedForEveryone || (currentUser?.uid && msg?.deletedFor?.[currentUser.uid]) || (msg?.id && localDeletedForMeIds.has(msg.id))) {
+                setMenuConfig(null);
+                return;
+              }
               const senderName = msg?.senderId === currentUser.uid ? "You" : selectedUser.name || "Friend";
               setReplyingToMessage({ id: msgId, senderName, text });
               setMenuConfig(null);
