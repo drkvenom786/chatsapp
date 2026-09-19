@@ -1,6 +1,6 @@
 # ChatsApp
 
-> A modern, secure, private real-time messaging progressive web app (PWA) with end-to-end encryption (E2EE), WebRTC voice/video calls, and media attachments.
+> A modern, secure, private real-time messaging progressive web app (PWA) with end-to-end encryption (E2EE), WebRTC voice calls, and media attachments.
 
 ---
 
@@ -30,7 +30,7 @@ chatsapp/
 
 - **End-to-End Encryption (E2EE)**: Messages and previews encrypted on device with cryptographic keys.
 - **Realtime Messaging**: Instant messaging and presence synchronization powered by Firebase Realtime Database.
-- **Voice & Video Calling**: Low-latency peer communication powered by WebRTC and Cloudflare Calls.
+- **Voice Calling**: Low-latency peer communication powered by WebRTC and Cloudflare Calls.
 - **Cloudflare R2 Media Storage**: Secure, scalable file uploads for photos, videos, voice notes, and documents.
 - **Push Notifications**: Background push notifications supported via Firebase Cloud Messaging (FCM).
 - **Progressive Web App (PWA)**: Installable on iOS, Android, and Desktop with offline caching.
