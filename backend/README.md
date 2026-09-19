@@ -56,7 +56,6 @@ Add the following **Environment Variables**:
 - `FIREBASE_AUTH_DOMAIN`: `<project>.firebaseapp.com`
 - `FIREBASE_DATABASE_URL`: `https://<project>-default-rtdb.firebaseio.com`
 - `FIREBASE_PROJECT_ID`: Your Firebase project ID
-- `FIREBASE_STORAGE_BUCKET`: `<project>.firebasestorage.app`
 - `FIREBASE_MESSAGING_SENDER_ID`: Your sender ID
 - `FIREBASE_APP_ID`: Your Firebase web app ID
 - `FIREBASE_VAPID_KEY`: Your web push VAPID key

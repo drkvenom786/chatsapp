@@ -77,7 +77,6 @@ cd chatsapp
 | `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth Domain | `your-project.firebaseapp.com` |
 | `VITE_FIREBASE_DATABASE_URL` | Firebase Realtime Database URL | `https://your-project-default-rtdb.firebaseio.com` |
 | `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID | `your-project` |
-| `VITE_FIREBASE_STORAGE_BUCKET`| Firebase Storage Bucket | `your-project.firebasestorage.app` |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Messaging Sender ID | `123456789012` |
 | `VITE_FIREBASE_APP_ID` | Firebase Web App ID | `1:123456789012:web:...` |
 | `VITE_FIREBASE_MEASUREMENT_ID` | Google Analytics Measurement ID (Optional) | `G-XXXXXXXXXX` |
@@ -110,7 +109,6 @@ GitHub Actions automatically builds and deploys both frontend and backend upon e
    - `VITE_FIREBASE_AUTH_DOMAIN`
    - `VITE_FIREBASE_DATABASE_URL`
    - `VITE_FIREBASE_PROJECT_ID`
-   - `VITE_FIREBASE_STORAGE_BUCKET`
    - `VITE_FIREBASE_MESSAGING_SENDER_ID`
    - `VITE_FIREBASE_APP_ID`
    - `VITE_FIREBASE_MEASUREMENT_ID`
