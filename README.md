@@ -115,7 +115,7 @@ cd backend
 npm install
 
 # Create R2 bucket for media storage
-npx wrangler r2 bucket create dschat-media
+npx wrangler r2 bucket create chatsapp-media
 
 # Deploy to Cloudflare Workers
 npm run deploy

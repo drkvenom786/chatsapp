@@ -37,7 +37,7 @@ npx wrangler login
 
 ### 2. Create the R2 Storage Bucket
 ```bash
-npx wrangler r2 bucket create dschat-media
+npx wrangler r2 bucket create chatsapp-media
 ```
 
 ### 3. Deploy the Worker

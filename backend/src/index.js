@@ -43,7 +43,7 @@ export default {
       return new Response(
         JSON.stringify({
           status: "ok",
-          service: "dschat-backend-worker",
+          service: "chatsapp-backend-worker",
           timestamp: new Date().toISOString(),
           endpoints: [
             "/api/config",
