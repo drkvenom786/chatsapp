@@ -62,14 +62,17 @@ Add the following **Environment Variables**:
 - `FIREBASE_VAPID_KEY`: Your web push VAPID key
 - `FRONTEND_URL`: Your Netlify frontend URL (e.g., `https://your-chatsapp.netlify.app`)
 
-### 5. Add Secrets (for Push Notifications)
-To send push notifications, add either the legacy server key or service account JSON:
+### 5. Add Secrets
+To secure your backend and configure push notifications, set the required secrets:
 ```bash
-# Option A: Legacy FCM Server Key
-npx wrangler secret put FCM_SERVER_KEY
+# Backend Access Key (Required to authenticate API requests from your frontend)
+npx wrangler secret put BACKEND_ACCESS_KEY
 
-# Option B: HTTP v1 Firebase Service Account JSON (paste single-line JSON string)
+# Push Notifications: HTTP v1 Firebase Service Account JSON (paste single-line JSON string)
 npx wrangler secret put FIREBASE_SERVICE_ACCOUNT
+
+# Optional: Legacy FCM Server Key
+npx wrangler secret put FCM_SERVER_KEY
 ```
 
 ---

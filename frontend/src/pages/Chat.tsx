@@ -49,7 +49,7 @@ import {
   getAccentBorderClass,
 } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
-import { getApiUrl, getMediaUrl } from "@/lib/api";
+import { getApiUrl, getMediaUrl, getApiHeaders } from "@/lib/api";
 import {
   Search,
   ArrowLeft,
@@ -263,6 +263,7 @@ export default function Chat({
 
         const res = await fetch(getApiUrl("/api/upload-media"), {
           method: "POST",
+          headers: getApiHeaders(),
           body: formData,
         });
 

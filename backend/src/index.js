@@ -11,7 +11,7 @@ export default {
     const corsHeaders = {
       "Access-Control-Allow-Origin": allowedOrigin,
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS, DELETE",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, Range, X-File-Name, X-Requested-With",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, Range, X-File-Name, X-Requested-With, X-Backend-Key",
       "Access-Control-Expose-Headers": "Content-Length, Content-Range, ETag",
     };
 
@@ -21,6 +21,21 @@ export default {
         status: 204,
         headers: corsHeaders,
       });
+    }
+
+    // Backend Access Key Protection (configured via environment variable BACKEND_ACCESS_KEY)
+    const expectedKey = env.BACKEND_ACCESS_KEY || env.API_SECRET_KEY || "";
+    if (expectedKey) {
+      const isExempt = url.pathname === "/" || url.pathname === "/health" || url.pathname.startsWith("/api/media/");
+      if (!isExempt) {
+        const clientKey = request.headers.get("x-backend-key") || url.searchParams.get("access_key") || (request.headers.get("authorization")?.replace(/^Bearer\s+/i, ""));
+        if (clientKey !== expectedKey) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized: Invalid or missing backend access key." }),
+            { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+      }
     }
 
     // Health Check / Root endpoint

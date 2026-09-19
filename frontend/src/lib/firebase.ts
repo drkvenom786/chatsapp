@@ -1,4 +1,4 @@
-import { getApiUrl } from "./api";
+import { getApiUrl, getApiHeaders } from "./api";
 
 const FIREBASE_VERSION = "10.14.1";
 
@@ -21,7 +21,9 @@ let configFetched = false;
 async function ensureConfigLoaded() {
   if (configFetched || firebaseConfig.apiKey) return;
   try {
-    const res = await fetch(getApiUrl("/api/config"));
+    const res = await fetch(getApiUrl("/api/config"), {
+      headers: getApiHeaders(),
+    });
     if (res.ok) {
       const remoteConfig = await res.json();
       Object.assign(firebaseConfig, remoteConfig);
@@ -281,7 +283,9 @@ export async function lookupEmailByUsername(rawUsername: string): Promise<string
 
   // 1. Try Cloudflare Worker server-side lookup API first
   try {
-    const res = await fetch(getApiUrl(`/api/lookup-username?username=${encodeURIComponent(cleanInput)}`));
+    const res = await fetch(getApiUrl(`/api/lookup-username?username=${encodeURIComponent(cleanInput)}`), {
+      headers: getApiHeaders(),
+    });
     if (res.ok) {
       const data = await res.json();
       if (data && data.success && data.email) {
@@ -1581,7 +1585,7 @@ export async function sendMessage(
       for (const tokenStr of uniqueTokens) {
         fetch(getApiUrl("/api/send-notification"), {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getApiHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({
             token: tokenStr,
             title: `New message from ${senderName}`,
@@ -2071,7 +2075,7 @@ export async function deleteMessageForEveryone(
       if (val && val.mediaKey) {
         fetch(getApiUrl("/api/delete-media"), {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getApiHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ key: val.mediaKey }),
         }).catch((err) => console.warn("R2 delete call error:", err));
       }
@@ -2368,7 +2372,7 @@ export async function sendCallPushNotification(
     for (const tokenStr of uniqueTokens) {
       fetch(getApiUrl("/api/send-notification"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getApiHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           token: tokenStr,
           title: `📞 Incoming ${callType === "video" ? "Video" : "Voice"} Call`,

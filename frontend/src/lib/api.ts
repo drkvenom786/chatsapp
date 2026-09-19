@@ -1,12 +1,38 @@
 /**
  * API and Backend service configuration.
- * All URLs are strictly driven by environment variables.
+ * All URLs and access keys are strictly driven by environment variables.
  */
 
 // Cloudflare Worker Backend URL (e.g., https://chatsapp-backend.workers.dev)
-// If empty, relative paths are used (suitable for Netlify proxy redirects or local dev proxy)
 const RAW_BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || "").trim();
 export const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
+
+// Backend Access Key for authorized API requests (configured via VITE_BACKEND_ACCESS_KEY)
+export const BACKEND_ACCESS_KEY = (import.meta.env.VITE_BACKEND_ACCESS_KEY || "").trim();
+
+/**
+ * Returns headers with X-Backend-Key authentication attached.
+ */
+export function getApiHeaders(extraHeaders?: HeadersInit): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (BACKEND_ACCESS_KEY) {
+    headers["X-Backend-Key"] = BACKEND_ACCESS_KEY;
+  }
+  if (extraHeaders) {
+    if (extraHeaders instanceof Headers) {
+      extraHeaders.forEach((val, key) => {
+        headers[key] = val;
+      });
+    } else if (Array.isArray(extraHeaders)) {
+      extraHeaders.forEach(([k, v]) => {
+        headers[k] = v;
+      });
+    } else {
+      Object.assign(headers, extraHeaders);
+    }
+  }
+  return headers;
+}
 
 /**
  * Returns the full API URL for a given endpoint.
@@ -18,6 +44,15 @@ export function getApiUrl(endpoint: string): string {
     return cleanEndpoint;
   }
   return `${BACKEND_URL}${cleanEndpoint}`;
+}
+
+/**
+ * Helper for performing fetch requests with automatic backend authentication headers.
+ */
+export async function apiFetch(endpoint: string, init?: RequestInit): Promise<Response> {
+  const url = getApiUrl(endpoint);
+  const headers = getApiHeaders(init?.headers);
+  return fetch(url, { ...init, headers });
 }
 
 /**

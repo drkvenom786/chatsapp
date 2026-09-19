@@ -53,6 +53,7 @@ Standalone React + Vite + Tailwind PWA client for **ChatsApp**, designed for eff
    - **Publish directory**: `dist`
 5. Under **Environment variables**, add:
    - `VITE_BACKEND_URL`: Your deployed Cloudflare Worker URL (e.g., `https://your-worker.workers.dev`)
+   - `VITE_BACKEND_ACCESS_KEY`: Backend access key configured for your Cloudflare Worker
    - `VITE_FIREBASE_API_KEY`: Your Firebase web API key
    - `VITE_FIREBASE_AUTH_DOMAIN`: `your_project.firebaseapp.com`
    - `VITE_FIREBASE_DATABASE_URL`: `https://your_project-default-rtdb.firebaseio.com`
