@@ -886,6 +886,15 @@ export async function updateUserProfile(
     );
 }
 
+export async function updateUserBio(uid: string, bio: string) {
+  const runtime = await requireFirebase();
+  const trimmed = (bio || "").trim().slice(0, 140);
+  return runtime.dbFns.update(
+    runtime.dbFns.ref(runtime.db, `users/${uid}`),
+    { bio: trimmed }
+  );
+}
+
 export async function blockUser(currentUid: string, targetUid: string) {
   const runtime = await loadFirebase();
   if (!runtime || !currentUid || !targetUid) return;

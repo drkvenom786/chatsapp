@@ -27,6 +27,9 @@ interface User {
   isAnonymous?: boolean;
   lastSeen?: number;
   deleted?: boolean;
+  bio?: string;
+  username?: string;
+  displayName?: string;
 }
 
 export default function Contacts({ currentUser, onSelectContact }: ContactsProps) {
@@ -128,7 +131,7 @@ export default function Contacts({ currentUser, onSelectContact }: ContactsProps
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-base truncate">{user.name}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      @{user.username || user.displayName || user.name || user.email?.split("@")[0] || "user"}
+                      {user.bio ? user.bio : `@${user.username || user.displayName || user.name || user.email?.split("@")[0] || "user"}`}
                     </p>
                   </div>
                 </div>

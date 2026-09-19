@@ -39,6 +39,7 @@ import MessageContextMenu from "@/components/MessageContextMenu";
 import FullEmojiPicker from "@/components/FullEmojiPicker";
 import AudioPlayer from "@/components/AudioPlayer";
 import SlideUpAccept from "@/components/SlideUpAccept";
+import ContactProfileModal from "@/components/ContactProfileModal";
 import {
   useTheme,
   getSentBubbleClasses,
@@ -89,6 +90,7 @@ import {
   Eye,
   Clock,
   Lock,
+  Info,
 } from "lucide-react";
 
 interface ChatPageProps {
@@ -106,6 +108,7 @@ interface User {
   email?: string;
   online?: boolean;
   lastSeen?: number;
+  bio?: string;
 }
 
 
@@ -149,6 +152,7 @@ export default function Chat({
   const [inputText, setInputText] = useState("");
   const { recentChats } = useRecentChats(currentUser?.uid);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const [showContactProfile, setShowContactProfile] = useState(false);
   const [menuConfig, setMenuConfig] = useState<{ id: string; text: string; isOwn: boolean } | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
@@ -549,9 +553,12 @@ export default function Chat({
         .map(([uid, data]: [string, any]) => ({
           uid,
           name: data.name || data.email?.split("@")[0] || "User",
+          username: data.username || (data.name ? data.name.toLowerCase().replace(/\s+/g, "_") : data.email?.split("@")[0]),
+          displayName: data.displayName || data.name,
           email: data.email,
           online: data.visibility === "online" ? true : data.online || false,
           lastSeen: data.lastSeen,
+          bio: data.bio || "",
         }));
       setUsers(usersList);
       try {
@@ -561,6 +568,12 @@ export default function Chat({
 
     return () => unsubscribe();
   }, [currentUser?.uid]);
+
+  const activeContact = useMemo(() => {
+    if (!selectedUser?.uid) return selectedUser;
+    const live = users.find((u) => u.uid === selectedUser.uid);
+    return live ? { ...selectedUser, ...live } : selectedUser;
+  }, [users, selectedUser]);
 
 
 
@@ -1396,18 +1409,21 @@ export default function Chat({
             <ArrowLeft className="w-6 h-6 text-slate-600 dark:text-slate-300" />
           </Button>
 
-          <div className="flex items-center gap-3 min-w-0">
-            <Avatar className="h-10 w-10 border border-rose-200 dark:border-rose-900">
-              <AvatarFallback className="bg-rose-100 dark:bg-rose-900 text-rose-600 dark:text-rose-400 font-bold">
+          <div
+            onClick={() => setShowContactProfile(true)}
+            className="flex items-center gap-3 min-w-0 cursor-pointer select-none no-underline outline-none focus:outline-none focus:ring-0 active:bg-transparent [-webkit-tap-highlight-color:transparent]"
+          >
+            <Avatar className="h-10 w-10 border border-rose-200 dark:border-rose-900 select-none pointer-events-none">
+              <AvatarFallback className="bg-rose-100 dark:bg-rose-900 text-rose-600 dark:text-rose-400 font-bold select-none">
                 {String(selectedUser?.name || "?").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
-            <div className="min-w-0">
-              <p className="font-bold text-base truncate text-slate-800 dark:text-slate-100 leading-tight">
+            <div className="min-w-0 select-none">
+              <p className="font-bold text-base truncate text-slate-800 dark:text-slate-100 leading-tight no-underline select-none">
                 {selectedUser?.name || "Unknown"}
               </p>
-              <p className="text-xs flex items-center gap-1">
+              <p className="text-xs flex items-center gap-1 select-none">
                 {isTyping ? (
                   <span className="text-rose-500 font-semibold animate-pulse flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping inline-block"></span>
@@ -1453,8 +1469,18 @@ export default function Chat({
           {showHeaderMenu && (
             <div className="absolute right-0 top-12 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-rose-100 dark:border-rose-900 py-1 z-[100] animate-in fade-in zoom-in duration-200">
               <button
+                onClick={() => {
+                  setShowHeaderMenu(false);
+                  setShowContactProfile(true);
+                }}
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-left hover:bg-rose-50 dark:hover:bg-rose-900/20 text-slate-700 dark:text-slate-200 transition-colors"
+              >
+                <Info className="w-4 h-4 text-slate-500" />
+                Contact info
+              </button>
+              <button
                 onClick={handleClearChat}
-                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-left hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-600 dark:text-rose-400 transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-left hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-600 dark:text-rose-400 transition-colors border-t border-slate-100 dark:border-slate-800"
               >
                 <Trash2 className="w-4 h-4" />
                 Clear Chat
@@ -2266,6 +2292,18 @@ export default function Chat({
           </div>
         </div>
       )}
+      {/* Contact Profile Modal */}
+      <ContactProfileModal
+        isOpen={showContactProfile}
+        onClose={() => setShowContactProfile(false)}
+        contact={activeContact}
+        isOnline={Boolean(selectedUserOnline)}
+        isBlocked={isBlocked}
+        onToggleBlock={handleToggleBlockUser}
+        onStartVoiceCall={() => startCall("audio")}
+        onClearChat={handleClearChat}
+        messages={displayedMessages}
+      />
     </div>
   );
 }

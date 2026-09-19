@@ -21,7 +21,10 @@ import {
   ShieldCheck,
   Lock,
   Laptop,
+  Edit2,
+  X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import {
   useTheme,
   getSentBubbleClasses,
@@ -39,6 +42,7 @@ import {
   setUserNotifications,
   getDevices,
   revokeDevice,
+  updateUserBio,
   type DeviceInfo,
 } from "@/lib/firebase";
 import { getOrCreateDeviceId } from "@/lib/crypto/deviceManager";
@@ -67,6 +71,10 @@ export default function Settings({ currentUser, onLogout }: SettingsProps) {
   const [hideNotificationPreview, setHideNotificationPreview] = useState(() => {
     return localStorage.getItem("chatsapp_hide_preview") === "true";
   });
+  const [bio, setBio] = useState<string>(currentUser?.bio || "Hey there! I am using ChatsApp.");
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [bioInput, setBioInput] = useState("");
+  const [savingBio, setSavingBio] = useState(false);
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [currentDeviceId, setCurrentDeviceId] = useState<string>("");
   const developerUrl = "https://drkvenom786.github.io/webpage/";
@@ -130,6 +138,9 @@ export default function Settings({ currentUser, onLogout }: SettingsProps) {
             if (userData.hideNotificationPreview !== undefined) {
               setHideNotificationPreview(Boolean(userData.hideNotificationPreview));
             }
+            if (userData.bio) {
+              setBio(userData.bio);
+            }
           }
         }
         await loadDevices();
@@ -137,6 +148,21 @@ export default function Settings({ currentUser, onLogout }: SettingsProps) {
       fetchStatus();
     }
   }, [currentUser]);
+
+  const handleSaveBio = async () => {
+    if (!currentUser?.uid) return;
+    setSavingBio(true);
+    try {
+      await updateUserBio(currentUser.uid, bioInput);
+      setBio(bioInput.trim() || "Hey there! I am using ChatsApp.");
+      setIsEditingBio(false);
+      toast.success("Bio updated successfully!");
+    } catch (err) {
+      toast.error("Failed to update bio");
+    } finally {
+      setSavingBio(false);
+    }
+  };
 
   const handleRevokeDevice = async (targetDevId: string) => {
     if (!currentUser?.uid) return;
@@ -243,6 +269,64 @@ export default function Settings({ currentUser, onLogout }: SettingsProps) {
                   @{currentUser?.username || currentUser?.displayName || currentUser?.email?.split("@")[0] || "user"}
                 </p>
               </div>
+            </div>
+
+            {/* Custom Bio Section */}
+            <div className="mt-4 pt-3 border-t border-rose-100/60 dark:border-rose-900/40">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">About / Bio</span>
+                {!isEditingBio && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                    onClick={() => {
+                      setBioInput(bio);
+                      setIsEditingBio(true);
+                    }}
+                  >
+                    <Edit2 className="w-3.5 h-3.5 mr-1" /> Edit
+                  </Button>
+                )}
+              </div>
+              {isEditingBio ? (
+                <div className="space-y-2 mt-1">
+                  <Input
+                    value={bioInput}
+                    onChange={(e) => setBioInput(e.target.value)}
+                    placeholder="Enter your custom status or bio..."
+                    maxLength={140}
+                    className="text-sm bg-white dark:bg-slate-900 border-rose-200 dark:border-rose-800"
+                    autoFocus
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">{bioInput.length}/140</span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2.5 text-xs text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                        onClick={() => setIsEditingBio(false)}
+                        disabled={savingBio}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-7 px-3 text-xs bg-rose-600 hover:bg-rose-700 text-white"
+                        onClick={handleSaveBio}
+                        disabled={savingBio}
+                      >
+                        {savingBio ? "Saving..." : "Save Bio"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-foreground/90 italic bg-black/5 dark:bg-white/5 rounded-xl px-3 py-2 border border-black/5 dark:border-white/5">
+                  "{bio}"
+                </p>
+              )}
             </div>
           </div>
 
