@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-hue: 345;
+  --background: 345 50% 99%;
+  --foreground: 345 40% 20%;
+  --muted: 345 30% 96%;
+  --muted-foreground: 345 20% 45%;
+  --border: 345 30% 92%;
+
+  --glass-bg: rgba(255, 245, 247, 0.85);
+  --glass-border: rgba(255, 225, 230, 0.7);
+}
+
+/* Violet Theme Accent */
+[data-accent="violet"] {
+  --primary-hue: 265;
+  --background: 265 50% 99%;
+  --foreground: 265 40% 20%;
+  --muted: 265 30% 96%;
+  --muted-foreground: 265 20% 45%;
+  --border: 265 30% 92%;
+  --glass-bg: rgba(250, 245, 255, 0.85);
+  --glass-border: rgba(235, 215, 255, 0.7);
+}
+
+/* Emerald Theme Accent */
+[data-accent="emerald"] {
+  --primary-hue: 158;
+  --background: 158 50% 99%;
+  --foreground: 158 40% 20%;
+  --muted: 158 30% 96%;
+  --muted-foreground: 158 20% 45%;
+  --border: 158 30% 92%;
+  --glass-bg: rgba(240, 253, 248, 0.85);
+  --glass-border: rgba(209, 250, 229, 0.7);
+}
+
+/* Sky Theme Accent */
+[data-accent="sky"] {
+  --primary-hue: 199;
+  --background: 199 50% 99%;
+  --foreground: 199 40% 20%;
+  --muted: 199 30% 96%;
+  --muted-foreground: 199 20% 45%;
+  --border: 199 30% 92%;
+  --glass-bg: rgba(240, 249, 255, 0.85);
+  --glass-border: rgba(224, 242, 254, 0.7);
+}
+
+/* Amber Theme Accent */
+[data-accent="amber"] {
+  --primary-hue: 38;
+  --background: 38 50% 99%;
+  --foreground: 38 40% 20%;
+  --muted: 38 30% 96%;
+  --muted-foreground: 38 20% 45%;
+  --border: 38 30% 92%;
+  --glass-bg: rgba(254, 252, 232, 0.85);
+  --glass-border: rgba(254, 240, 138, 0.7);
+}
+
+/* Indigo Theme Accent */
+[data-accent="indigo"] {
+  --primary-hue: 239;
+  --background: 239 50% 99%;
+  --foreground: 239 40% 20%;
+  --muted: 239 30% 96%;
+  --muted-foreground: 239 20% 45%;
+  --border: 239 30% 92%;
+  --glass-bg: rgba(238, 242, 255, 0.85);
+  --glass-border: rgba(224, 231, 255, 0.7);
+}
+
+/* Dark Mode Variables across all accent choices */
+.dark,
+.dark[data-accent="rose"] {
+  --background: 220 24% 9%;
+  --foreground: 210 24% 96%;
+  --muted: 220 15% 18%;
+  --muted-foreground: 215 12% 68%;
+  --border: 220 15% 24%;
+
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+.dark[data-accent="violet"] {
+  --primary-hue: 265;
+  --background: 265 24% 9%;
+  --foreground: 265 20% 96%;
+  --muted: 265 15% 18%;
+  --muted-foreground: 265 12% 68%;
+  --border: 265 15% 24%;
+
+  --glass-bg: rgba(19, 15, 30, 0.85);
+  --glass-border: rgba(139, 92, 246, 0.25);
+}
+
+.dark[data-accent="emerald"] {
+  --primary-hue: 158;
+  --background: 158 24% 9%;
+  --foreground: 158 20% 96%;
+  --muted: 158 15% 18%;
+  --muted-foreground: 158 12% 68%;
+  --border: 158 15% 24%;
+
+  --glass-bg: rgba(15, 26, 22, 0.85);
+  --glass-border: rgba(16, 185, 129, 0.25);
+}
+
+.dark[data-accent="sky"] {
+  --primary-hue: 199;
+  --background: 199 24% 9%;
+  --foreground: 199 20% 96%;
+  --muted: 199 15% 18%;
+  --muted-foreground: 199 12% 68%;
+  --border: 199 15% 24%;
+
+  --glass-bg: rgba(15, 23, 35, 0.85);
+  --glass-border: rgba(14, 165, 233, 0.25);
+}
+
+.dark[data-accent="amber"] {
+  --primary-hue: 38;
+  --background: 38 24% 9%;
+  --foreground: 38 20% 96%;
+  --muted: 38 15% 18%;
+  --muted-foreground: 38 12% 68%;
+  --border: 38 15% 24%;
+
+  --glass-bg: rgba(28, 22, 15, 0.85);
+  --glass-border: rgba(245, 158, 11, 0.25);
+}
+
+.dark[data-accent="indigo"] {
+  --primary-hue: 239;
+  --background: 239 24% 9%;
+  --foreground: 239 20% 96%;
+  --muted: 239 15% 18%;
+  --muted-foreground: 239 12% 68%;
+  --border: 239 15% 24%;
+
+  --glass-bg: rgba(17, 19, 36, 0.85);
+  --glass-border: rgba(99, 102, 241, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  position: fixed;
+  inset: 0;
+  height: 100%;
+  height: 100dvh;
+  min-height: -webkit-fill-available;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+@supports (-webkit-touch-callout: none) {
+  html,
+  body,
+  #root {
+    height: -webkit-fill-available;
+  }
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Poppins', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+img, video, svg {
+  max-width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.glass,
+.glass-sm,
+.glass-lg {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px);
+}
+
+.dark .glass,
+.dark .glass-sm,
+.dark .glass-lg {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.transition-smooth {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}

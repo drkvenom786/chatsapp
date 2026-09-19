@@ -1,0 +1,16 @@
+# ==============================================================================
+# Netlify Single Repository (Monorepo) Configuration
+# Allows you to host both backend & frontend in a single GitHub repository.
+# Netlify will automatically build the frontend directory.
+# ==============================================================================
+
+[build]
+  base = "frontend"
+  publish = "dist"
+  command = "npm run build"
+
+# Single Page App fallback routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

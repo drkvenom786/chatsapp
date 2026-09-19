@@ -1,0 +1,14 @@
+{
+  "name": "chatsapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ChatsApp Monorepo - Cloudflare Worker Backend + Netlify Frontend",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build": "npm --prefix frontend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "deploy:backend": "npm --prefix backend run deploy"
+  }
+}

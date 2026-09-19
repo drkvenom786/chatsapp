@@ -1,0 +1,42 @@
+# ==============================================================================
+# ChatsApp Monorepo .gitignore
+# Prevents node_modules, build outputs, and private secrets from being committed
+# ==============================================================================
+
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Production Builds
+dist/
+*/dist/
+dist-ssr/
+*/dist-ssr/
+
+# Wrangler / Cloudflare Temporary & Cache Files
+.wrangler/
+*/.wrangler/
+
+# Secret and Local Environment Files (DO NOT COMMIT)
+.env
+*/.env
+.env.*
+*/.env.*
+!.env.example
+!*/.env.example
+.dev.vars
+*/.dev.vars
+.dev.vars.*
+*/.dev.vars.*
+!.dev.vars.example
+!*/.dev.vars.example
+*.local
+*/*.local
+
+# Logs and OS Artifacts
+*.log
+*/npm-debug.log*
+*/yarn-debug.log*
+.DS_Store
+Thumbs.db
+*.tsbuildinfo

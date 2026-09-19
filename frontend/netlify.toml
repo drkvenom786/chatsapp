@@ -1,0 +1,16 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# Single Page Application (SPA) routing for React Router / client routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Optional: If you prefer proxying /api directly to your Worker via Netlify rather than using VITE_BACKEND_URL:
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://your-worker-subdomain.workers.dev/api/:splat"
+#   status = 200
+#   force = true
